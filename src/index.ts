@@ -37,7 +37,7 @@ export default {
       // Atomic reservation prevents concurrent requests from exceeding the daily cap.
       const day=new Date().toISOString().slice(0,10);
       const reservation=await env.DB.prepare('INSERT INTO daily_usage(day,calls) VALUES (?,1) ON CONFLICT(day) DO UPDATE SET calls=calls+1 WHERE calls < ? RETURNING calls').bind(day,DAILY_LIMIT).first<{calls:number}>();
-      if(!reservation)return json({error:'Today’s 30-generation demo allowance is used. The sample still works; generation resets at midnight UTC.'},429);
+      if(!reservation)return json({code:'daily_limit',resetsAt:new Date(Date.parse(day+'T00:00:00Z')+86400000).toISOString(),error:`Today’s ${DAILY_LIMIT}-request shared AI allowance is used. Vehicle controls still work; AI resets at midnight UTC.`},429);
       const started=Date.now();
       const chat=input.mode==='vehicle-chat';
       const hosting=input.mode==='hosting';

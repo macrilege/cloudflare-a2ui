@@ -20,3 +20,5 @@
 #vehicle-chat-view.chat-window .paint .visual-choice-content{min-height:66px}#vehicle-chat-view.chat-window .visual-choice-text strong{overflow-wrap:anywhere}
 
 .visual-choice-option:has(input:disabled) .visual-choice-content{opacity:.62;cursor:not-allowed;background:#f3f4f6}.visual-choice-option:has(input:disabled) small{color:#374151}
+
+#chat-limit{margin:0 0 10px;padding:10px;border:1px solid #db9b2c;border-radius:8px;background:#fff4dd;color:#744608;font-size:13px;line-height:1.4}

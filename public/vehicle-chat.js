@@ -6,7 +6,7 @@ import { options, availableOptions, changeSelection, selectionMessage, fieldName
 
 export function initVehicleChat(){
   const $=s=>document.querySelector(s);
-  let draft=emptyDraft(),busy=false,surfaceId,latestEvent,currentDocument,inventoryExpanded=false;
+  let draft=emptyDraft(),busy=false,surfaceId,latestEvent,currentDocument,inventoryExpanded=false,quotaResetAt=0;
   function revealCar(){ $('#vehicle-answer').hidden=false;$('#inventory-answer').hidden=true;$('#chat-examples').hidden=true;$('#chat-suggestions').hidden=false; }
   function renderInventory(doc){
     renderSurface($('#inventory-card'),doc,{onAction:c=>{
@@ -25,7 +25,15 @@ export function initVehicleChat(){
     while($('#chat-thread').children.length>10)$('#chat-thread').firstElementChild.remove();
     $('#chat-thread').scrollTop=$('#chat-thread').scrollHeight;
   }
-  function pending(value){busy=value;$('#chat-thread').setAttribute('aria-busy',String(value));$('#vehicle-chat-view').querySelectorAll('#inventory-card button,#chat-car button,#chat-car input,#chat-car select,#chat-examples button,#chat-suggestions button,#vehicle-chat-form input,#vehicle-chat-form button').forEach(el=>el.disabled=value||el.dataset.unavailable==='true');}
+  function pauseAI(resetsAt){
+    quotaResetAt=Date.parse(resetsAt);
+    if(!Number.isFinite(quotaResetAt)||quotaResetAt<=Date.now())return;
+    $('#chat-limit').hidden=false;
+    if($('#vehicle-answer').hidden&&$('#inventory-answer').hidden)revealCar();
+    $('#chat-limit').textContent=`AI chat is paused: the shared daily allowance is used. It resets ${new Date(quotaResetAt).toLocaleString(undefined,{hour:'numeric',minute:'2-digit',timeZoneName:'short'})}. You can still change your car with the controls.`;
+    setTimeout(()=>{quotaResetAt=0;$('#chat-limit').hidden=true;pending(busy);},Math.min(quotaResetAt-Date.now(),86400000));
+  }
+  function pending(value){busy=value;$('#chat-thread').setAttribute('aria-busy',String(value));$('#vehicle-chat-view').querySelectorAll('#inventory-card button,#chat-car button,#chat-car input,#chat-car select,#chat-examples button,#chat-suggestions button,#vehicle-chat-form input,#vehicle-chat-form button').forEach(el=>el.disabled=value||el.dataset.unavailable==='true');if(quotaResetAt>Date.now())$('#vehicle-chat-view').querySelectorAll('#chat-examples button,#chat-suggestions button,#vehicle-chat-form input,#vehicle-chat-form button').forEach(el=>el.disabled=true);}
   function receive(wire,source,appendMessage=true){
     const create=wire.find(m=>m.createSurface)?.createSurface;
     const data=wire.find(m=>m.updateDataModel)?.updateDataModel;
@@ -112,14 +120,15 @@ export function initVehicleChat(){
   $('#chat-suggestions').querySelectorAll('button').forEach(b=>b.onclick=()=>send(b.textContent));
   $('#vehicle-chat-form').onsubmit=e=>{e.preventDefault();send($('#chat-input').value.trim());};
   async function send(prompt){
-    if(busy||prompt.length<3)return;
+    if(busy||quotaResetAt>Date.now()||prompt.length<3)return;
     latestEvent=undefined;say(prompt,true);$('#chat-input').value='';pending(true);$('#chat-status').textContent='AI is reading your request…';
     try{
       const response=await fetch('/api/generate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt,mode:'vehicle-chat',draft,surfaceId}),signal:AbortSignal.timeout(45000)});
-      if(!response.ok){const result=await response.json();throw new Error(result.error||'Could not get a response.');}
+      if(!response.ok){const result=await response.json();if(result.code==='daily_limit'){pauseAI(result.resetsAt);$('#chat-input').value=prompt;$('#chat-status').textContent='Your message was not processed. Your car is unchanged.';return;}throw new Error(result.error||'Could not get a response.');}
       receive((await response.text()).trim().split('\n').map(line=>JSON.parse(line)),'LIVE AI · A2UI UPDATE');
       explain('Live AI chooses the next step. A2UI displays it.',currentDocument.data.view==='inventory'?'AI recognized an inventory request. The application retrieved its captured dealer record and sent an A2UI inventory card. This is not a live stock search.':'AI interpreted your message and returned preference changes. The application validated them, kept your other choices, and sent A2UI controls. The layout and available options come from the trusted application catalog.');
       $('#chat-status').textContent=`Done · ${response.headers.get('x-daily-remaining')} AI messages available today. Changing card controls uses no AI calls.`;
+      if(response.headers.get('x-daily-remaining')==='0'){const tomorrow=new Date();tomorrow.setUTCHours(24,0,0,0);pauseAI(tomorrow.toISOString());}
     }catch(error){$('#chat-status').textContent=error.name==='TimeoutError'?'The AI took too long. Your draft is unchanged; try again or use the card buttons.':`${error.message} Your draft is unchanged; you can still change the controls on an existing card.`;}
     finally{pending(false);}
   };

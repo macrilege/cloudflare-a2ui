@@ -127,3 +127,12 @@ test('replacing an Explorer wheel request clears only that request and preserves
   const unresolved=changeSelection({...draft,unsupported:'red leather seats'},'explorerWheels','standard');
   assert.equal(unresolved.unsupported,'red leather seats');assert.equal(matchingBuild(unresolved),undefined);
 });
+
+test('daily quota exhaustion identifies a reset time and never calls AI',async()=>{
+  const {default:worker}=await import('../src/index.ts');let calls=0;
+  const env={RATE_LIMITER:{limit:async()=>({success:true})},DB:{prepare:()=>({bind:()=>({first:async()=>null})})},AI:{run:async()=>{calls++;}}};
+  const response=await worker.fetch(new Request('https://example.com/api/generate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({mode:'vehicle-chat',prompt:'black Explorer gray wheels',draft:emptyDraft()})}),env);
+  assert.equal(response.status,429);assert.equal(calls,0);
+  const body=await response.json();assert.equal(body.code,'daily_limit');
+  assert.ok(Date.parse(body.resetsAt)>Date.now());assert.equal(new Date(body.resetsAt).getUTCHours(),0);
+});
