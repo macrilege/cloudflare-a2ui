@@ -54,7 +54,7 @@ The main tutorial retains the small custom renderer so its state and protocol ex
 
 ## Verification
 
-- 67 Node tests: existing vehicle catalogs, allowed transitions, endpoint limits, restaurant lifecycle, same-surface updates, data-only messages and explicit SDK unknown-element rejection.
+- 70 Node tests: existing vehicle catalogs, allowed transitions, endpoint limits, restaurant lifecycle, same-surface updates, data-only messages and explicit SDK unknown-element rejection.
 - Browser checks: all five tutorial steps; state preservation across chat/control changes; explicit confirmation; AI error recovery; SDK binding/action callbacks; 390px mobile overflow; deployed CSP compatibility. Local browser API responses are mocked for repeatable tests, separate from real deployed AI smoke tests.
 - Build: TypeScript check, bundled SDK asset, Wrangler deployment dry run.
 - Deployed real-AI verification: restaurant first request and party-size follow-up passed; the SDK Explorer follow-up changed white to blue while preserving a locally selected 4WD, and the review callback produced the matching captured URL. Initial SDK inference failures were surfaced without replacing state; removing unrelated hidden Mustang defaults from the new Explorer baseline preceded the successful rerun. One SDK sample reported 568ms server generation and about 0.8s request/render, not a latency benchmark.

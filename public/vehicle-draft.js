@@ -19,9 +19,10 @@ const oldStates=[
 export const capturedBuilds=fordConfigurations.map((build,i)=>({...build,state:Object.fromEntries(Object.keys(options).map((key,j)=>[key,oldStates[i][j]]))})).concat(conversationBuilds,expandedBuilds.filter(build=>build.trim!=='active'));
 export function mergeDraft(draft,patch){
   const next={...emptyDraft(),...draft,...patch};
-  if(patch.vehicle&&patch.vehicle!==draft.vehicle){next.unsupported='';next.wheelRequest='';next.priority='';next.budget='';}
+  if(patch.vehicle&&patch.vehicle!==draft.vehicle){for(const key of ['unsupported','wheelRequest','priority','budget'])if(!Object.hasOwn(patch,key))next[key]='';}
   if(Object.hasOwn(patch,'wheels')&&!Object.hasOwn(patch,'wheelRequest'))next.wheelRequest='';
-  if(next.wheelRequest)next.wheels='';
+  if(Object.hasOwn(patch,'explorerWheels')&&!Object.hasOwn(patch,'wheelRequest'))next.wheelRequest='';
+  if(next.wheelRequest&&next.vehicle!=='explorer')next.wheels='';
   if(patch.explorerWheels&&patch.explorerWheels!=='standard'&&!Object.hasOwn(patch,'explorerDrive'))next.explorerDrive='4wd';
   if(patch.explorerDrive==='rwd'&&!Object.hasOwn(patch,'explorerWheels'))next.explorerWheels='standard';
   if(patch.engine==='ecoboost'&&!Object.hasOwn(patch,'transmission')&&next.transmission==='manual')next.transmission='automatic';
@@ -29,7 +30,7 @@ export function mergeDraft(draft,patch){
   return next;
 }
 export function matchingBuild(draft){
-  if(draft.unsupported)return undefined;
+  if(draft.unsupported||draft.wheelRequest)return undefined;
   if(draft.vehicle==='explorer')return explorerBuilds.find(build=>build.color===draft.explorerColor&&build.drive===draft.explorerDrive&&(build.wheels||'standard')===(draft.explorerWheels||'standard'));
   if(draft.wheelRequest)return undefined;
   return capturedBuilds.find(build=>Object.keys(options).every(key=>draft[key]&&draft[key]===build.state[key]));

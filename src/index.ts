@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { documentSchema, messages, sample, validateDocument } from './protocol.ts';
-import { draftSchema, vehicleChatDocument, vehicleChatSystem } from './vehicle-chat.ts';
+import { draftSchema, vehicleChatDocument, vehicleChatSystem, explorerFollowupRules } from './vehicle-chat.ts';
 import { hostingSchema, hostingChatDocument, hostingChatSystem } from './hosting-chat.ts';
 import { incidentSchema, incidentChatDocument, incidentChatSystem } from './incident-chat.ts';
 import { restaurantSchema, restaurantChatDocument, restaurantChatSystem } from './restaurant-chat.ts';
@@ -44,7 +44,7 @@ export default {
       const incident=input.mode==='incident';
       const restaurant=input.mode==='restaurant';
       const persistent=chat||hosting||incident||restaurant;
-      const result=await env.AI.run(MODEL,{messages:[{role:'system',content:restaurant?restaurantChatSystem:incident?incidentChatSystem:hosting?hostingChatSystem:chat?vehicleChatSystem:system},{role:'user',content:JSON.stringify(input)}],max_tokens:persistent?600:2000,temperature:0.4,response_format:{type:'json_object'}});
+      const result=await env.AI.run(MODEL,{messages:[{role:'system',content:restaurant?restaurantChatSystem:incident?incidentChatSystem:hosting?hostingChatSystem:chat?vehicleChatSystem+explorerFollowupRules:system},{role:'user',content:JSON.stringify(input)}],max_tokens:persistent?600:2000,temperature:0.4,response_format:{type:'json_object'}});
       if(!result || typeof result!=='object' || !('choices' in result)) throw new Error('Missing model output');
       const choice=result.choices?.[0];
       if(!choice || !('message' in choice) || !choice.message?.content || choice.finish_reason==='length') throw new Error('Incomplete model output');
