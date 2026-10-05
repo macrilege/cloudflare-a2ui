@@ -5,7 +5,7 @@ import { hostingSchema, hostingChatDocument, hostingChatSystem } from './hosting
 import { incidentSchema, incidentChatDocument, incidentChatSystem } from './incident-chat.ts';
 import { restaurantSchema, restaurantChatDocument, restaurantChatSystem } from './restaurant-chat.ts';
 const MODEL='@cf/qwen/qwen3-30b-a3b-fp8';
-const DAILY_LIMIT=30;
+const DEFAULT_DAILY_LIMIT=30;
 const actionSchema=z.object({version:z.literal('v0.9'),action:z.object({name:z.literal('refine'),surfaceId:z.string().max(80),sourceComponentId:z.string().max(50),timestamp:z.iso.datetime(),context:z.object({instruction:z.string().max(600)}).strict()}).strict()}).strict();
 const inputSchema=z.object({prompt:z.string().trim().min(3).max(800),mode:z.enum(['vehicle-chat','hosting','incident','restaurant']).optional(),hosting:hostingSchema.optional(),incident:incidentSchema.optional(),restaurant:restaurantSchema.optional(),draft:draftSchema.optional(),surfaceId:z.string().uuid().optional(),event:actionSchema.optional(),previous:documentSchema.optional()}).strict();
 const system=`You design useful, beautiful A2UI interfaces. Return ONLY {"components":[...],"data":{...}}. components MUST be an ARRAY of component objects, never a dictionary keyed by ID. data MUST contain every initial bound value. Use this exact subset of the A2UI v0.9 basic catalog:
@@ -34,10 +34,12 @@ export default {
     try{
       const rate=await env.RATE_LIMITER.limit({key:request.headers.get('CF-Connecting-IP')??'local'});
       if(!rate.success)return json({error:'A little breather: please try again in a minute.'},429);
-      // Atomic reservation prevents concurrent requests from exceeding the daily cap.
+      const configuredLimit=Number(env.DAILY_AI_LIMIT??DEFAULT_DAILY_LIMIT);
+      const dailyLimit=Number.isSafeInteger(configuredLimit)&&configuredLimit>=0?configuredLimit:DEFAULT_DAILY_LIMIT;
+      // Zero temporarily disables the ceiling; keep counting attempts for visibility.
       const day=new Date().toISOString().slice(0,10);
-      const reservation=await env.DB.prepare('INSERT INTO daily_usage(day,calls) VALUES (?,1) ON CONFLICT(day) DO UPDATE SET calls=calls+1 WHERE calls < ? RETURNING calls').bind(day,DAILY_LIMIT).first<{calls:number}>();
-      if(!reservation)return json({code:'daily_limit',resetsAt:new Date(Date.parse(day+'T00:00:00Z')+86400000).toISOString(),error:`Today’s ${DAILY_LIMIT}-request shared AI allowance is used. Vehicle controls still work; AI resets at midnight UTC.`},429);
+      const reservation=await env.DB.prepare('INSERT INTO daily_usage(day,calls) VALUES (?,1) ON CONFLICT(day) DO UPDATE SET calls=calls+1 WHERE ? = 0 OR calls < ? RETURNING calls').bind(day,dailyLimit,dailyLimit).first<{calls:number}>();
+      if(!reservation)return json({code:'daily_limit',resetsAt:new Date(Date.parse(day+'T00:00:00Z')+86400000).toISOString(),error:`Today’s ${dailyLimit}-request shared AI allowance is used. Vehicle controls still work; AI resets at midnight UTC.`},429);
       const started=Date.now();
       const chat=input.mode==='vehicle-chat';
       const hosting=input.mode==='hosting';
@@ -51,7 +53,7 @@ export default {
       const raw=JSON.parse(choice.message.content);
       const doc=restaurant?restaurantChatDocument(raw,input.restaurant):incident?incidentChatDocument(raw,input.incident):hosting?hostingChatDocument(raw,input.hosting):chat?vehicleChatDocument(raw,input.draft):validateDocument(raw);
       const output=messages(doc,persistent&&input.surfaceId?input.surfaceId:crypto.randomUUID()).filter(m=>!(persistent&&input.surfaceId&&'createSurface' in m));
-      return new Response(output.map(m=>JSON.stringify(m)).join('\n')+'\n',{headers:{'content-type':'application/x-ndjson','cache-control':'no-store','x-model':MODEL,'x-generation-ms':String(Date.now()-started),'x-daily-remaining':String(DAILY_LIMIT-reservation.calls),'x-content-type-options':'nosniff'}});
+      return new Response(output.map(m=>JSON.stringify(m)).join('\n')+'\n',{headers:{'content-type':'application/x-ndjson','cache-control':'no-store','x-model':MODEL,'x-generation-ms':String(Date.now()-started),'x-daily-remaining':dailyLimit===0?'unlimited':String(dailyLimit-reservation.calls),'x-content-type-options':'nosniff'}});
     }catch(error){console.error(JSON.stringify({event:'generation_failed',...(error instanceof z.ZodError?{issues:error.issues.map(i=>({code:i.code,...('expected' in i?{expected:i.expected}:{}),path:i.path.map(p=>typeof p==='number'?p:['patch','budget','priority','data','recommendation','message','components','unsupported','time','party','stage','cuisine','day','seating'].includes(String(p))?p:'field')}))}:{}),kind:error instanceof z.ZodError?'invalid_components':error instanceof Error?error.name:'unknown'}));return json({error:'The model could not produce a valid interface this time. Your current preview is safe—please try again.'},502);}
   }
 } satisfies ExportedHandler<Env>;

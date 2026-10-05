@@ -54,7 +54,7 @@ The main tutorial retains the small custom renderer so its state and protocol ex
 
 ## Verification
 
-- 71 Node tests: existing vehicle catalogs, allowed transitions, endpoint limits, restaurant lifecycle, same-surface updates, data-only messages and explicit SDK unknown-element rejection.
+- 72 Node tests: existing vehicle catalogs, allowed transitions, endpoint limits, restaurant lifecycle, same-surface updates, data-only messages and explicit SDK unknown-element rejection.
 - Browser checks: all five tutorial steps; state preservation across chat/control changes; explicit confirmation; AI error recovery; SDK binding/action callbacks; 390px mobile overflow; deployed CSP compatibility. Local browser API responses are mocked for repeatable tests, separate from real deployed AI smoke tests.
 - Build: TypeScript check, bundled SDK asset, Wrangler deployment dry run.
 - Deployed real-AI verification: restaurant first request and party-size follow-up passed; the SDK Explorer follow-up changed white to blue while preserving a locally selected 4WD, and the review callback produced the matching captured URL. Initial SDK inference failures were surfaced without replacing state; removing unrelated hidden Mustang defaults from the new Explorer baseline preceded the successful rerun. One SDK sample reported 568ms server generation and about 0.8s request/render, not a latency benchmark.
@@ -73,7 +73,7 @@ No conversion lift, development-time saving, WCAG conformance, full protocol con
 
 ## Runtime and cost controls
 
-Worker `a2ui-lab`. Existing AI binding and D1 daily usage counter are unchanged. All live modes share an atomic cap of 30 inference attempts per UTC day and six requests per minute per IP per serving location. Failures consume an attempt. No prompts are stored; only date and count. No new cloud bindings, cron jobs or secrets.
+Worker `a2ui-lab`. Existing AI binding and D1 daily usage counter are unchanged. During owner testing, `DAILY_AI_LIMIT` is set to `0`, disabling the application’s daily ceiling. Restore it to `30` after testing. Usage counting continues, and all live modes retain six requests per minute per IP per serving location. Failures consume an attempt. No prompts are stored; only date and count. No new cloud bindings, cron jobs or secrets.
 
 Public teaching copy remains cloud-neutral. Deployment implementation is provider-specific. No Gemini key, Google Cloud account, Google ADK or AG-UI dependency is required for this spike.
 

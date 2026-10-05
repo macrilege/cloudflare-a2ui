@@ -136,3 +136,13 @@ test('daily quota exhaustion identifies a reset time and never calls AI',async()
   const body=await response.json();assert.equal(body.code,'daily_limit');
   assert.ok(Date.parse(body.resetsAt)>Date.now());assert.equal(new Date(body.resetsAt).getUTCHours(),0);
 });
+
+test('testing mode removes the daily ceiling while preserving usage counting and per-minute protection',async()=>{
+  const {default:worker}=await import('../src/index.ts');let calls=0,limits=[];
+  const env={DAILY_AI_LIMIT:'0',RATE_LIMITER:{limit:async()=>({success:true})},DB:{prepare:()=>({bind:(...values)=>{limits=values;return {first:async()=>({calls:31})};}})},AI:{run:async()=>{calls++;return {choices:[{finish_reason:'stop',message:{content:JSON.stringify({intent:'inventory',message:'Show inventory',patch:{}})}}]};}}};
+  const request=()=>new Request('https://example.com/api/generate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({mode:'vehicle-chat',prompt:'Show inventory',draft:emptyDraft()})});
+  const response=await worker.fetch(request(),env);
+  assert.equal(response.status,200);assert.equal(response.headers.get('x-daily-remaining'),'unlimited');assert.equal(calls,1);assert.deepEqual(limits.slice(1),[0,0]);
+  env.RATE_LIMITER.limit=async()=>({success:false});
+  assert.equal((await worker.fetch(request(),env)).status,429);assert.equal(calls,1);
+});

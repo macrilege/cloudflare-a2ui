@@ -62,7 +62,7 @@ $('#sdk-form').onsubmit=async event=>{
     if(!data||!components)throw new Error('Missing configuration.');
     // The app adds one explicit review action to the validated server document.
     receive(tutorialMessages(reviewDocument({data,components}),surfaceId,current));
-    $('#sdk-status').textContent=`Real AI + official renderer complete in ${((performance.now()-start)/1000).toFixed(1)}s · ${response.headers.get('x-daily-remaining')} requests left today.`;
+    $('#sdk-status').textContent=`Real AI + official renderer complete in ${((performance.now()-start)/1000).toFixed(1)}s · ${response.headers.get('x-daily-remaining')==='unlimited'?'Daily AI cap temporarily off for testing.':response.headers.get('x-daily-remaining')+' requests left today.'}`;
   }catch(error){$('#sdk-status').textContent=`${error.message} Existing card controls remain available.`;}
   finally{busy=false;$('#sdk-surface').inert=false;$('#sdk-submit').disabled=false;}
 };

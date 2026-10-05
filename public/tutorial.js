@@ -99,7 +99,7 @@ async function sendAI(prompt,append=true){
     applyTutorialMessages(messages,nextSurfaceId,current);
     surfaceId=nextSurfaceId;
     receive(messages,'LIVE AI · VALIDATED A2UI');say(current.data.message);$('#prompt').value='';
-    $('#status').textContent=`Updated by real AI · ${response.headers.get('x-daily-remaining')} requests left today. Card controls use no AI calls.`;
+    $('#status').textContent=`Updated by real AI · ${response.headers.get('x-daily-remaining')==='unlimited'?'Daily AI cap temporarily off for testing.':response.headers.get('x-daily-remaining')+' requests left today.'} Card controls use no AI calls.`;
     return true;
   }catch(error){
     $('#status').textContent=`${error.name==='TimeoutError'?'The AI took too long.':error.message} Your reservation is unchanged.${current?' Existing card controls still work.':' Please retry when the service is available.'}`;
