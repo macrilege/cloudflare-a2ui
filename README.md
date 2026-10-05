@@ -8,6 +8,20 @@
 - [Official A2UI SDK spike](https://a2ui-lab.macrilege.workers.dev/sdk-spike/)
 - [Interactive restaurant tutorial](https://a2ui-lab.macrilege.workers.dev/)
 
+## Run entirely local with Ollama or LM Studio
+
+On this Mac, double-click **Start Local Demo.command** and open [the local vehicle chat](http://localhost:8794/automotive/). It uses the already installed **Ollama gemma4:12b** model. Keep the Terminal window open; closing the server stops the demo. The launcher starts Ollama on loopback when needed and does not download models. Node.js 24+ and an installed model are required; on a fresh checkout the launcher installs the locked npm dependencies.
+
+The same Mustang/Explorer chat, colors, wheels, invalid-option explanations, inventory snapshot and captured Ford links run locally. Every submitted chat message goes to the local model. The existing server validates its preference patch and builds the same A2UI messages; direct controls update the shared draft without inference. Model wording/accuracy can differ from the hosted model. There are no cloud AI calls, API keys, D1 database or daily AI allowance in this mode. One request runs at a time to avoid filling the local model queue.
+
+For **LM Studio**, load a local instruction model and start its local server on port 1234 in the Developer screen. Double-click **Start LM Studio Demo.command**, enter the model identifier displayed by LM Studio, and use [port 8795](http://localhost:8795/automotive/). Leaving the identifier blank works only when its API lists exactly one model. The adapter uses LM Studio's [OpenAI-compatible structured output API](https://lmstudio.ai/docs/developer/openai-compat/structured-output). Its request/response contract is tested; actual inference on this Mac was verified with Ollama, not LM Studio.
+
+For developers, `npm run local` and `npm run local:lmstudio` run the corresponding server. Configuration is supplied through `LOCAL_AI_PROVIDER` (`ollama` or `lmstudio`), `LOCAL_AI_MODEL` (exact installed identifier), `LOCAL_AI_BASE_URL` (loopback HTTP origin only), and `LOCAL_PORT` (8794 by default). The LM Studio double-click launcher defaults to 8795 so both examples can coexist. The server does not read `.env` files. `/api/local-status` reports provider/model availability.
+
+The Node adapter imports the existing Worker handler and substitutes local inference, static assets and an in-memory attempt counter. It leaves hosted deployment settings untouched. It binds only to 127.0.0.1 and rejects other Host/Origin values; model API requests remain server-side. Only files inside `public/` with approved asset extensions are served. No prompt history is written by this adapter. Ford/dealer handoffs still open external websites, and existing Google Fonts references may require internet; local inference does not mean all shopping links work offline.
+
+Real Ollama checks on the M5 Pro: white Explorer with unsupported black wheels → clarification; “gray wheels” → Carbonized Gray wheels + required 4WD, preserving white paint; blue EcoBoost convertible automatic → captured Ford link; manual EcoBoost → conflict with no build link; inventory → captured listing. The cold first response took about 8 seconds; four subsequent API checks took 0.8–1.8 seconds each. These are a few observed requests, not a benchmark or an accuracy guarantee. The browser also verified orange V8/bronze wheels → select blue → ask for manual, preserving the other choices.
+
 ## Local development
 
 Use a current Node.js release that supports running TypeScript tests directly, and install dependencies with `npm ci`. Run `npm run build:sdk` to rebuild the official renderer bundle. `npm test` and `npm run check` verify the code without calling live AI.
@@ -54,7 +68,7 @@ The main tutorial retains the small custom renderer so its state and protocol ex
 
 ## Verification
 
-- 72 Node tests: existing vehicle catalogs, allowed transitions, endpoint limits, restaurant lifecycle, same-surface updates, data-only messages and explicit SDK unknown-element rejection.
+- 77 Node tests (including local adapters and HTTP boundaries): existing vehicle catalogs, allowed transitions, endpoint limits, restaurant lifecycle, same-surface updates, data-only messages and explicit SDK unknown-element rejection.
 - Browser checks: all five tutorial steps; state preservation across chat/control changes; explicit confirmation; AI error recovery; SDK binding/action callbacks; 390px mobile overflow; deployed CSP compatibility. Local browser API responses are mocked for repeatable tests, separate from real deployed AI smoke tests.
 - Build: TypeScript check, bundled SDK asset, Wrangler deployment dry run.
 - Deployed real-AI verification: restaurant first request and party-size follow-up passed; the SDK Explorer follow-up changed white to blue while preserving a locally selected 4WD, and the review callback produced the matching captured URL. Initial SDK inference failures were surfaced without replacing state; removing unrelated hidden Mustang defaults from the new Explorer baseline preceded the successful rerun. One SDK sample reported 568ms server generation and about 0.8s request/render, not a latency benchmark.

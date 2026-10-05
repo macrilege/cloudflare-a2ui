@@ -110,7 +110,7 @@ export function initVehicleChat(){
     $('#chat-thread').replaceChildren();$('#chat-input').value='';
     local(draftDocument(draft,'Hi, how can I help you?'),'READY · CHOOSE A VEHICLE');
     $('#vehicle-answer').hidden=true;$('#inventory-answer').hidden=true;$('#chat-examples').hidden=false;$('#chat-suggestions').hidden=true;$('#chat-menu').hidden=true;$('#chat-menu-toggle').setAttribute('aria-expanded','false');$('#conversation-scroll').scrollTop=0;
-    $('#chat-status').textContent='Suggestions and messages use live AI. Try Mustang or Explorer.';
+    $('#chat-status').textContent=document.querySelector('meta[name=local-ai]')?'Local AI on this Mac. The first response may take longer while the model loads.':'Suggestions and messages use live AI. Try Mustang or Explorer.';
     explain('Say it. See it. Change it.','AI reads your request. The app turns it into A2UI controls. Follow-up messages update this same car, so “make it orange” keeps your other choices.');
   }
   $('#chat-restart').onclick=reset;
@@ -123,11 +123,11 @@ export function initVehicleChat(){
     if(busy||quotaResetAt>Date.now()||prompt.length<3)return;
     latestEvent=undefined;say(prompt,true);$('#chat-input').value='';pending(true);$('#chat-status').textContent='AI is reading your request…';
     try{
-      const response=await fetch('/api/generate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt,mode:'vehicle-chat',draft,surfaceId}),signal:AbortSignal.timeout(45000)});
+      const response=await fetch('/api/generate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt,mode:'vehicle-chat',draft,surfaceId}),signal:AbortSignal.timeout(document.querySelector('meta[name=local-ai]')?125000:45000)});
       if(!response.ok){const result=await response.json();if(result.code==='daily_limit'){pauseAI(result.resetsAt);$('#chat-input').value=prompt;$('#chat-status').textContent='Your message was not processed. Your car is unchanged.';return;}throw new Error(result.error||'Could not get a response.');}
       receive((await response.text()).trim().split('\n').map(line=>JSON.parse(line)),'LIVE AI · A2UI UPDATE');
       explain('Live AI chooses the next step. A2UI displays it.',currentDocument.data.view==='inventory'?'AI recognized an inventory request. The application retrieved its captured dealer record and sent an A2UI inventory card. This is not a live stock search.':'AI interpreted your message and returned preference changes. The application validated them, kept your other choices, and sent A2UI controls. The layout and available options come from the trusted application catalog.');
-      $('#chat-status').textContent=`Done · ${response.headers.get('x-daily-remaining')==='unlimited'?'Daily AI cap temporarily off for testing.':response.headers.get('x-daily-remaining')+' AI messages available today.'} Changing card controls uses no AI calls.`;
+      $('#chat-status').textContent=`Done · ${response.headers.get('x-ai-provider')?`Local ${response.headers.get('x-ai-provider')} · ${response.headers.get('x-model')}.`:response.headers.get('x-daily-remaining')==='unlimited'?'Daily AI cap temporarily off for testing.':response.headers.get('x-daily-remaining')+' AI messages available today.'} Changing card controls uses no AI calls.`;
       if(response.headers.get('x-daily-remaining')==='0'){const tomorrow=new Date();tomorrow.setUTCHours(24,0,0,0);pauseAI(tomorrow.toISOString());}
     }catch(error){$('#chat-status').textContent=error.name==='TimeoutError'?'The AI took too long. Your draft is unchanged; try again or use the card buttons.':`${error.message} Your draft is unchanged; you can still change the controls on an existing card.`;}
     finally{pending(false);}

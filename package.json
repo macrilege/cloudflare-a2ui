@@ -10,7 +10,9 @@
     "test": "node --test tests/*.test.ts",
     "build": "npm run build:sdk && npm run check && wrangler deploy --dry-run",
     "deploy": "wrangler deploy",
-    "build:sdk": "esbuild browser/sdk-spike.js --bundle --format=esm --minify --outfile=public/sdk-spike/bundle.js --legal-comments=linked"
+    "build:sdk": "esbuild browser/sdk-spike.js --bundle --format=esm --minify --outfile=public/sdk-spike/bundle.js --legal-comments=linked",
+    "local": "node local/server.mjs",
+    "local:lmstudio": "LOCAL_AI_PROVIDER=lmstudio node local/server.mjs"
   },
   "keywords": [],
   "author": "",
