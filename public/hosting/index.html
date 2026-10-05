@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#00095b"><title>Hosting guide · Interface Lab</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/hosting/style.css"><script type="module" src="/hosting/app.js"></script></head>
+<body class="hosting-page">
+<header><a class="brand" href="/" aria-label="Interface Lab home"><span class="brand-mark">a2</span> Interface Lab<span class="beta">PLAYGROUND</span></a><a href="/incident/">New: Incident Lab ↗</a></header>
+<main>
+  <div class="hosting-hero"><div class="eyebrow">INTERSERVER HOSTING · A2UI DEMO</div><h1>Describe your site.<br><span>Shape your setup.</span></h1><p>A chat that turns hosting questions into a plan you can use.</p></div>
+  <div class="hosting-layout">
+    <section class="hosting-chat" aria-label="Hosting conversation">
+      <div class="hosting-chat-top"><div><span class="guide-dot"></span><strong>Your hosting guide</strong></div><button id="restart" type="button">Start over</button></div>
+      <div id="thread" role="log" aria-label="Chat conversation"></div>
+      <div class="hosting-compose">
+        <span class="mini-label">TRY A FREE EXAMPLE</span>
+        <div class="hosting-examples"><button data-example="simple">Simple website</button><button data-example="app">PHP + email</button><button data-example="move">Move a site</button></div>
+        <form id="chat-form"><label for="prompt">What are you hosting?</label><div class="hosting-input"><input id="prompt" required minlength="3" maxlength="800" autocomplete="off" placeholder="A PHP site with a database and email…"><button type="submit" aria-label="Send message">Send ↗</button></div></form>
+        <div class="followups"><span>Then try:</span><button data-followup="Keep email elsewhere">“Keep email elsewhere”</button><button data-followup="Make it a static site">“Make it a static site”</button></div>
+        <p id="status" role="status">Examples and controls use no AI calls.</p>
+      </div>
+      <details class="how-it-works"><summary>What makes this A2UI?</summary><p><b>AI understands your request.</b> The application validates the changes, then sends an A2UI description of the controls and checklist.</p><p><b>The interface adapts.</b> Ask for email and an email card appears. Choose a static site and database steps disappear. Checkboxes update bound data.</p><p>This uses a small A2UI v0.9 catalog. A real hosting integration would connect these actions to your backend.</p><details><summary>Inspect the A2UI messages</summary><p id="source"></p><pre id="wire"></pre></details></details>
+    </section>
+    <section class="hosting-plan" aria-label="Your editable hosting plan"><div class="plan-top"><div><span class="mini-label">YOUR LAUNCH PLAN</span><p id="progress" role="status"></p></div><button id="download" type="button">Copy checklist</button></div><progress id="progress-bar" max="1" value="0" aria-label="Checklist completion"></progress><div id="surface"></div><p class="plan-note">Practice checklist · checked items reflect your input, not server verification. Progress lasts until you reload.</p></section>
+  </div>
+  <footer>Planning demo. No hosting account is connected and no settings are changed.<br><a href="https://www.interserver.net/tips/kb/manage-email-accounts-in-directadmin/" target="_blank" rel="noreferrer">InterServer email guide ↗</a><a href="https://docs.directadmin.com/webservices/ssl/ssl-and-letsencrypt-for-domains.html" target="_blank" rel="noreferrer">DirectAdmin HTTPS guide ↗</a></footer>
+</main>
+</body></html>

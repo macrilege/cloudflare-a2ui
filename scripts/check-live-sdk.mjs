@@ -1,0 +1,15 @@
+import { chromium } from '@playwright/test';
+import fs from 'node:fs';
+const browser=await chromium.launch({channel:'chrome',headless:true});
+const page=await browser.newPage({viewport:{width:1440,height:1080}}),errors=[];
+page.on('pageerror',e=>errors.push(e.message));
+page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+await page.goto('https://a2ui-lab.macrilege.workers.dev/sdk-spike/');
+await page.getByRole('radio',{name:'4WD',exact:true}).check();
+const responsePromise=page.waitForResponse(r=>r.url().endsWith('/api/generate'),{timeout:50000});
+await page.getByRole('button',{name:'Send to real AI',exact:false}).click();
+const response=await responsePromise,body=await response.text();
+await page.getByRole('button',{name:'Review configuration',exact:true}).click();
+const result={status:response.status(),remaining:response.headers()['x-daily-remaining'],generationMs:response.headers()['x-generation-ms'],body:body.slice(0,1600),uiStatus:await page.locator('#sdk-status').textContent(),blue:await page.getByRole('radio',{name:'Vapor Blue Metallic',exact:true}).isChecked(),drive:await page.getByRole('radio',{name:'4WD',exact:true}).isChecked(),errors};
+fs.writeFileSync('artifacts/live-sdk-result.json',JSON.stringify(result,null,2));
+console.log(JSON.stringify(result));await page.screenshot({path:'artifacts/live-sdk-desktop.png',fullPage:true});await browser.close();

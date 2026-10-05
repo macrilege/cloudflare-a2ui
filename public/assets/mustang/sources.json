@@ -1,0 +1,16 @@
+{
+  "source": "Ford Build & Price, 2026 Mustang",
+  "checked": "2026-10-03",
+  "images": {
+    "bronze": "https://www.ford.com/content/dam/vdm_ford/live/en_us/ford/nameplate/mustang/2026/part/wheeltype/d2vas/D2VAS_64S_19SinisterBronzePntd_350x197.jpg?imformat=chrome&imwidth=66",
+    "gtstandard": "https://www.ford.com/content/dam/vdm_ford/live/en_us/ford/nameplate/mustang/2026/part/wheeltype/d2uet/D2UET_64T_18EbonyBlkPntdAlumn_350x197.jpg?imformat=chrome&imwidth=66",
+    "rtr": "https://www.ford.com/content/dam/vdm_ford/live/en_us/ford/nameplate/mustang/2026/part/wheeltype/d2vbq/D2VBQ_64B_19TarnishedDkPntd_350x197.jpg?imformat=chrome&imwidth=66",
+    "twenty": "https://www.ford.com/content/dam/vdm_ford/live/en_us/ford/nameplate/mustang/2026/part/wheeltype/d2fcm/D2FCM_64M_20PremiumPntdAlumn_350x197.jpg?imformat=chrome&imwidth=66",
+    "ecostandard": "https://www.ford.com/content/dam/vdm_ford/live/en_us/ford/nameplate/mustang/2026/part/wheeltype/d2uef/D2UEF_64F_18PntdShad_SilverCastAlumn_350x197.jpg?imformat=chrome&imwidth=66",
+    "gtconvertible": "https://www.ford.com/content/dam/vdm_ford/live/en_us/ford/nameplate/mustang/2026/part/wheeltype/d2vbv/D2VBV_64V_19ShadowSilverPntdAlumn_350x197.jpg?imformat=chrome&imwidth=66"
+  },
+  "paintSwatches": {
+    "orange": "rgb(255,126,0)",
+    "blue": "rgb(68,91,114)"
+  }
+}

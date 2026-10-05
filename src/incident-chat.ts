@@ -1,0 +1,11 @@
+import { z } from 'zod';
+import { defaultIncident, changeIncident, incidentDocument, scenarios } from '../public/incident/simulation.js';
+import { validateDocument } from './protocol.ts';
+export const incidentSchema=z.object({scenario:z.enum(['latency','errors','auth']),traffic:z.enum(['normal','high']),inspected:z.boolean(),fixed:z.boolean(),tested:z.boolean()}).strict().refine(s=>(!s.fixed||s.inspected)&&(!s.tested||s.fixed));
+const replySchema=z.object({patch:z.object({scenario:z.enum(['latency','errors','auth']).optional(),traffic:z.enum(['normal','high']).optional()}).strict(),unsupported:z.boolean().optional()}).strict();
+export const incidentChatSystem=`Select a fictional API incident simulation from a user's request. Return ONLY JSON, e.g. {"patch":{"scenario":"errors","traffic":"high"}}. Supported patch fields: scenario latency|errors|auth, traffic normal|high. Slow/latency/cache -> latency. 500 errors/failed release/deploy/checkout -> errors. Login/401/expired credential -> auth. Heavy traffic/load spike -> high. Normal load -> normal. Input incident is the current simulation. Preserve unmentioned fields by omitting them. Never return commands, URLs, metrics, prose or execute actions. User actions inspect, fix and test are buttons in the UI, never model fields. For requests to act on a real service, pricing, arbitrary incidents, or execute fixes, return unsupported true with an empty patch. This is a fictional learning lab and has no monitoring or infrastructure access. /no_think`;
+export function incidentChatDocument(raw:unknown,current=defaultIncident()){
+  const {patch,unsupported}=replySchema.parse(raw),before=incidentSchema.parse(current),next=incidentSchema.parse(changeIncident(before,patch));
+  const message=unsupported?'This lab simulates slow responses, failed releases and login failures. Choose a scenario below; its buttons run only inside the demo.':`Loaded ${scenarios[next.scenario].label.toLowerCase()} with ${next.traffic==='high'?'high':'normal'} traffic. ${next.inspected?'Your investigation is still here. Use the next action on the card.':'Start with “Inspect demo logs” on the incident card.'}`;
+  return validateDocument(incidentDocument(next,message));
+}

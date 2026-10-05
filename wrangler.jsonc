@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "a2ui-lab",
+  "main": "src/index.ts",
+  "account_id": "e9355770e41aa661fcf958f456635531",
+  "compatibility_date": "2026-10-03",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
+  "ai": { "binding": "AI", "remote": true },
+  "d1_databases": [{"binding":"DB", "database_name":"a2ui-demo-usage", "database_id":"501ef0e7-760f-4a0d-8e45-fdbd26b3fe77"}],
+  "ratelimits": [{"name":"RATE_LIMITER", "namespace_id":"103202601", "simple":{"limit":6,"period":60}}],
+  "observability": { "enabled": true, "head_sampling_rate": 0.1 }
+}

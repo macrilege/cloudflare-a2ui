@@ -1,0 +1,7 @@
+/hosting / 302
+/hosting/* / 302
+/incident / 302
+/incident/* / 302
+/restaurant / 302
+/restaurant/ / 302
+/restaurant/index.html / 302

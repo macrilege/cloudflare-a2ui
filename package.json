@@ -1,0 +1,33 @@
+{
+  "name": "cloudflare-a2ui",
+  "version": "1.0.0",
+  "description": "Automotive A2UI v0.9 example with an AI service",
+  "main": "index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "types": "wrangler types",
+    "check": "tsc --noEmit",
+    "test": "node --test tests/*.test.ts",
+    "build": "npm run build:sdk && npm run check && wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "build:sdk": "esbuild browser/sdk-spike.js --bundle --format=esm --minify --outfile=public/sdk-spike/bundle.js --legal-comments=linked"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261003.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "esbuild": "0.28.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.147.0"
+  },
+  "dependencies": {
+    "@a2ui/lit": "0.12.0",
+    "@a2ui/web_core": "0.12.0",
+    "zod": "^4.6.5"
+  },
+  "private": true
+}
